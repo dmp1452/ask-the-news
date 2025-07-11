@@ -15,7 +15,6 @@ def fetch_and_store_news():
      url = f"https://newsapi.org/v2/top-headlines?country=us&pageSize=10&apiKey={API_KEY}"
      response = requests.get(url)
      articles = response.json().get("articles",[])
-
      for article in articles:
           collection.update_one(
                {"url": article["url"]},
@@ -30,3 +29,4 @@ def fetch_and_store_news():
           )
 if __name__ == "__main__":
     fetch_and_store_news()
+    print("done")
