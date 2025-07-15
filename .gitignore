@@ -1,3 +1,4 @@
 .env
-app/vector_store.faiss
-app/vector_id_map.pkl
+vector_store.faiss
+vector_id_map.pkl
+app/__pycache__

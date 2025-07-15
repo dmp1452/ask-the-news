@@ -1,9 +1,8 @@
 import requests
 
 def get_prompt(query, context):
-    print("context:",context)
     return ("You are an expert news analyst. Use the following news articles to answer the query below."
-    "Only use information from the context provided. If the answer cannot be found in the articles, say \"The information is not available.\""
+    "Only use information from the context provided. If the answer cannot be found in any of the articles, say \"The information is not available.\""
     f"query: {query}"
     f"context: {context}"
     "Please provide a clear, concise, and factual answer based only on the articles above.")

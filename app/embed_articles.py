@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from sentence_transformers import SentenceTransformer
 import numpy as np
-from embeddings import create_index, add_to_index, save_index
+from app.embeddings import create_index, add_to_index, save_index
 import os
 from dotenv import load_dotenv
 
