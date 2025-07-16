@@ -18,17 +18,17 @@ collection = db["articles"]
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 index= create_index()
+def embed_articles():
+    print("Embedding and indexing articles")
+    count = 0
+    for article in collection.find():
+        text = f"{article.get('title'),''}{article.get('content','')}".strip()
+        if not text:
+            continue
+        embedding = model.encode(text)
+        add_to_index(index, embedding, article_id=str(article["_id"]))
+        count +=1
 
-print("Embedding and indexing articles")
-count = 0
-for article in collection.find():
-    text = f"{article.get('title'),''}{article.get('content','')}".strip()
-    if not text:
-        continue
-    embedding = model.encode(text)
-    add_to_index(index, embedding, article_id=str(article["_id"]))
-    count +=1
-
-print(f"✅ Embedded and indexed {count} articles.")
-save_index(index)
-print("index and id map saved")
+    print(f"✅ Embedded and indexed {count} articles.")
+    save_index(index)
+    print("index and id map saved")

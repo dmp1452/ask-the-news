@@ -8,8 +8,8 @@ import os
 from dotenv import load_dotenv
 from app.llm import use_ollama
 from bson import ObjectId
-from app.news_ingestor import fetch_and_store_news
-import app.embed_articles
+from app.news_ingestor import fetch_articles
+from app.embed_articles import embed_articles
 load_dotenv()
 
 
@@ -25,15 +25,12 @@ app = FastAPI()
 
 class Question(BaseModel):
     query: str
-    update: bool
 
 @app.post("/ask")
 async def ask_question(question: Question):
     query = question.query
-    update = question.update
-    if update:
-        fetch_and_store_news()
-
+    fetch_articles(query)
+    embed_articles
 
     query_embedding = embedder.encode(query)
     indices, scores = search_index(index, query_embedding, top_k=5)
