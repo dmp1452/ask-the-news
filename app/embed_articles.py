@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from sentence_transformers import SentenceTransformer
 import numpy as np
-from app.embeddings import create_index, add_to_index, save_index
+from app.embeddings import VectorStore
 import os
 from dotenv import load_dotenv
 
@@ -16,18 +16,23 @@ db = client["ask_the_news"]
 collection = db["articles"]
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-index= create_index()
-def embed_articles():
+def embed_articles(vector_store: VectorStore):
     print("Embedding and indexing articles")
     count = 0
     for article in collection.find():
-        text = f"{article.get('title'),''}{article.get('content','')}".strip()
+        text = f"{article.get('title', '')} {article.get('content', '')}".strip()
         if not text:
             continue
-        embedding = model.encode(text)
-        add_to_index(index, embedding, article_id=str(article["_id"]))
-        count +=1
+        try:
+            embedding = model.encode(text)
+            embedding = embedding.cpu().numpy() if hasattr(embedding, "cpu") else embedding
+            embedding = np.asarray(embedding)
+            vector_store.add_to_index(embedding, article_id=str(article["_id"]))
+            count +=1
+        except Exception as e:
+            print(f"Error embedding article {article.get('_id')}: {e}")
+            continue
 
-    print(f"✅ Embedded and indexed {count} articles.")
-    save_index(index)
-    print("index and id map saved")
+
+    print(f"Embedded and indexed {count} articles.")
+    vector_store.save_index()
