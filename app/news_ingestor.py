@@ -23,14 +23,18 @@ def fetch_articles(topic: str, max_articles: int = 10):
         if count >= max_articles:
             break
 
-        url = entry.link
+        if "url=" in entry.link:
+            url = entry.link.split("url=")[-1]
+        else:
+            url = entry.link 
+
         article = Article(url)
 
         try:
             article.download()
             article.parse()
         except:
-            continue  # Skip if parsing fails
+            continue 
 
         data = {
             "title": article.title,
@@ -39,9 +43,9 @@ def fetch_articles(topic: str, max_articles: int = 10):
             "url": url,
             "source": entry.get("source", {}).get("title", "unknown")
         }
-        print(article.title)
+        print(article.text)
         collection.update_one(
-            {"url": url},  # Prevent duplicates
+            {"url": url}, 
             {"$set": data},
             upsert=True
         )

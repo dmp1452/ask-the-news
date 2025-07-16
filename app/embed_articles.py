@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mongo_uri = os.getenv("MONGO_URI")  # Or whatever your env variable is called
-
+mongo_uri = os.getenv("MONGO_URI") 
 
 MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)

@@ -25,7 +25,7 @@ def add_to_index(index, embedding: np.ndarray, article_id: str):
 def search_index(index, query_embedding: np.ndarray, top_k=5):
     vec = normalize(query_embedding).astype("float32").reshape(1, -1)
     scores, indices = index.search(vec, top_k)
-    return indices[0], scores[0]  # returns list of indices and scores
+    return indices[0], scores[0] 
 
 
 def save_index(index):
