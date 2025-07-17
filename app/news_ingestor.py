@@ -2,6 +2,7 @@ import requests
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 load_dotenv()
 
@@ -13,8 +14,8 @@ db = client["ask_the_news"]
 collection = db["articles"]
 
 def fetch_articles(topic: str, max_articles: int = 10):
-    query = topic.replace(" ", "+")
-    url = f"https://gnews.io/api/v4/search?q=tesla&lang=en&apikey={API_KEY}"
+    encoded_query = quote_plus(topic)
+    url = f"https://gnews.io/api/v4/search?q={encoded_query}&lang=en&apikey={API_KEY}&max={max_articles}"
 
     response = requests.get(url)
     if response.status_code != 200:
@@ -39,4 +40,4 @@ def fetch_articles(topic: str, max_articles: int = 10):
             {"$set": data},
             upsert=True
         )
-    print(f"Found {count} articles")
+    print(f"found {count} articles on {encoded_query}")

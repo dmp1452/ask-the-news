@@ -19,20 +19,21 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 def embed_articles(vector_store: VectorStore):
     print("Embedding and indexing articles")
     count = 0
-    for article in collection.find():
+    query_filter = {"$or": [{"is_embedded": {"$exists": False}}, {"is_embedded": False}]}
+    for article in collection.find(query_filter):
         text = f"{article.get('title', '')} {article.get('content', '')}".strip()
         if not text:
+            collection.update_one({"_id": article["_id"]}, {"$set": {"is_embedded": True}})
             continue
         try:
             embedding = model.encode(text)
-            embedding = embedding.cpu().numpy() if hasattr(embedding, "cpu") else embedding
-            embedding = np.asarray(embedding)
             vector_store.add_to_index(embedding, article_id=str(article["_id"]))
+            collection.update_one({"_id": article["_id"]}, {"$set": {"is_embedded": True}})
             count +=1
         except Exception as e:
             print(f"Error embedding article {article.get('_id')}: {e}")
             continue
 
 
-    print(f"Embedded and indexed {count} articles.")
+    print(f"Embedded and indexed {count} new articles.")
     vector_store.save_index()
