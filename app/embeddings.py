@@ -13,6 +13,7 @@ class VectorStore:
     def __init__(self):
         self.index: faiss.IndexFlatIP = self.create_index()
         self.id_map: List[str] = []
+        self.id_set: set[str] = set() 
         self.load_index_and_map() 
     
     def create_index(self) -> faiss.IndexFlatIP:
@@ -24,14 +25,17 @@ class VectorStore:
         return vector / norm if norm != 0 else vector
 
     def add_to_index(self, embedding: np.ndarray, article_id: str):
+        if article_id in self.id_set:
+            return
         vec = self.normalize(embedding).astype("float32").reshape(1, -1)
-        self.index.add(vec)  # type: ignore
+        self.index.add(vec)
         self.id_map.append(article_id)
+        self.id_set.add(article_id)
 
 
     def search_index(self, query_embedding: np.ndarray, top_k=5):
         vec = self.normalize(query_embedding).astype("float32").reshape(1, -1)
-        distances, indices = self.index.search(vec, top_k)  # type: ignore
+        distances, indices = self.index.search(vec, top_k)
         return indices[0], distances[0] 
 
 
@@ -51,15 +55,18 @@ class VectorStore:
                 self.index = faiss.read_index(INDEX_FILE)
                 with open(ID_MAP_FILE, "rb") as f:
                     self.id_map = pickle.load(f)
+                self.id_set = set(self.id_map)
                 print(f"Loaded existing index with {len(self.id_map)} embeddings.")
             except Exception as e:
                 print(f"Could not load existing index ({e}). Creating a new one.")
                 self.index = self.create_index()
                 self.id_map = []
+                self.id_set = set()
         else:
             print("ℹNo existing index found. A new index will be created.")
             self.index = self.create_index()
             self.id_map = []
+            self.id_set = set()
 
     def get_index_size(self) -> int:
         return self.index.ntotal
