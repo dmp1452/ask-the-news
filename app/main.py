@@ -38,34 +38,28 @@ async def ask_question(question: Question):
     query_embedding = embedder.encode(query)
     query_embedding = query_embedding.cpu().numpy() if hasattr(query_embedding, "cpu") else query_embedding
     query_embedding = np.asarray(query_embedding)
-    indices, scores = vector_store.search_index(query_embedding, top_k=5)
+    indices, scores = vector_store.search_index(query_embedding, top_k=3)
 
     current_id_map = vector_store.get_id_map()
     matched_ids = [current_id_map[i] for i in indices if i < len(current_id_map)]
 
-    if not matched_ids:
+   
+    articles = list(collection.find({"_id": {"$in": [ObjectId(id) for id in matched_ids]}}))
+    if not articles:
         return {
             "question": query,
             "answer": "No relevant articles found to answer your question.",
             "sources_used": []
         }
-    articles = list(collection.find({"_id": {"$in": [ObjectId(id) for id in matched_ids]}}))
-    print("matched_ids", matched_ids)
-    print(f"found {len(articles)} articles")
     context = ""
-    if articles:
-        article = articles[0]
-        description = article.get('description', '').strip()
-        if description:
-            context = f"{article.get('title', '')}\n{description}"
-        else:
-            content = article.get('content', '').strip()
-            context = f"{article.get('title', '')}\n{content}"
-    print(context)
+    for article in articles:
+        content = article.get('content', '').strip()
+        context += f"content: {content}"
+
     answer = use_ollama(query,context)
 
     return {
         "question": query,
         "answer": answer,
-        "sources_used": [a['title'] for a in articles]
+        "sources_used": [a['title'][:40]+"..." for a in articles]
     }
