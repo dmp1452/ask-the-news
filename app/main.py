@@ -61,5 +61,4 @@ async def ask_question(question: Question):
     return {
         "question": query,
         "answer": answer,
-        "sources_used": [a['title'][:40]+"..." for a in articles]
     }
