@@ -11,6 +11,7 @@ def get_prompt(query, context):
 
 def use_ollama(query,context):
     url = "http://localhost:11434/api/generate"
+    print(len(context))
     data = { "model": "gemma3:4b", "prompt": get_prompt(query,context), "stream": False}
     response = requests.post(url,json=data)
     response.raise_for_status()

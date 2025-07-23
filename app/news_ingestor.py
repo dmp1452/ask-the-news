@@ -3,6 +3,7 @@ import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
+from newspaper import Article  # NEW: for scraping
 
 load_dotenv()
 
@@ -25,13 +26,23 @@ def fetch_articles(topic: str, max_articles: int = 10):
     articles = response.json().get("articles", [])
     count = 0
     for article in articles:
-        count +=1
+        count += 1
+        full_content = ""
+        article_url = article.get("url")
+        if article_url:
+            try:
+                news_article = Article(article_url)
+                news_article.download()
+                news_article.parse()
+                full_content = news_article.text
+            except Exception as e:
+                print(f"Failed to scrape {article_url}: {e}")
         data = {
             "title": article.get("title"),
             "description": article.get("description"),
-            "content": article.get("content"),
+            "content": full_content or article.get("content", ""),
             "publishedAt": article.get("publishedAt"),
-            "url": article.get("url"),
+            "url": article_url,
             "source": article.get("source", {}).get("name", "unknown")
         }
 
