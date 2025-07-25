@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 from newspaper import Article  # NEW: for scraping
+from pymongo.errors import DuplicateKeyError
 
 load_dotenv()
 
@@ -13,6 +14,9 @@ MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client["ask_the_news"]
 collection = db["articles"]
+
+# Create a unique index on the 'url' field
+collection.create_index("url", unique=True)
 
 def fetch_articles(topic: str, max_articles: int = 10):
     encoded_query = quote_plus(topic)
@@ -46,9 +50,12 @@ def fetch_articles(topic: str, max_articles: int = 10):
             "source": article.get("source", {}).get("name", "unknown")
         }
 
-        collection.update_one(
-            {"url": data["url"]},
-            {"$set": data},
-            upsert=True
-        )
+        try:
+            collection.update_one(
+                {"url": data["url"]},
+                {"$set": data},
+                upsert=True
+            )
+        except DuplicateKeyError:
+            print(f"Duplicate article found for URL: {data['url']}")
     print(f"found {count} articles on {encoded_query}")
