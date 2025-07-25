@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 from urllib.parse import quote_plus
 from newspaper import Article  # NEW: for scraping
 from pymongo.errors import DuplicateKeyError
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -24,7 +28,7 @@ def fetch_articles(topic: str, max_articles: int = 10):
 
     response = requests.get(url)
     if response.status_code != 200:
-        print(f"GNews API error: {response}")
+        logger.error(f"GNews API error: {response}")
         return
 
     articles = response.json().get("articles", [])
@@ -40,7 +44,7 @@ def fetch_articles(topic: str, max_articles: int = 10):
                 news_article.parse()
                 full_content = news_article.text
             except Exception as e:
-                print(f"Failed to scrape {article_url}: {e}")
+                logger.warning(f"Failed to scrape {article_url}: {e}")
         data = {
             "title": article.get("title"),
             "description": article.get("description"),
@@ -57,5 +61,5 @@ def fetch_articles(topic: str, max_articles: int = 10):
                 upsert=True
             )
         except DuplicateKeyError:
-            print(f"Duplicate article found for URL: {data['url']}")
-    print(f"found {count} articles on {encoded_query}")
+            logger.info(f"Duplicate article found for URL: {data['url']}")
+    logger.info(f"Found {count} articles on {encoded_query}")
