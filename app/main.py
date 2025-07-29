@@ -56,7 +56,7 @@ async def ask_question(question: Question):
     for article in articles:
         content = article.get('content', '').strip()
         context += f"content: {content}"
-    print(context)
+
     answer = use_ollama(query,context)
 
     return {
