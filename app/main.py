@@ -49,7 +49,7 @@ async def ask_question(question: Question):
     if not articles:
         return {
             "question": query,
-            "answer": "No relevant articles found to answer your question.",
+            "answer": "No relevant articles found to answer your query.",
             "sources_used": []
         }
     context = ""
