@@ -45,7 +45,7 @@ async def ask_question(question: Question):
 
    
     articles = list(collection.find({"_id": {"$in": [ObjectId(id) for id in matched_ids]}}))
-    print(len(articles))
+
     if not articles:
         return {
             "question": query,
