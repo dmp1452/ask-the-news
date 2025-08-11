@@ -2,10 +2,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for newspaper3k and other packages
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    libxml2-dev \
+    libxslt-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libffi-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching

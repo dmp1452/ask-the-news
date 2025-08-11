@@ -15,14 +15,25 @@ load_dotenv()
 API_KEY = os.getenv("GNEWS_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 
-client = MongoClient(MONGO_URI)
-db = client["ask_the_news"]
-collection = db["articles"]
+# Initialize MongoDB connection lazily
+def get_mongo_client():
+    if not MONGO_URI:
+        raise ValueError("MONGO_URI environment variable is required")
+    return MongoClient(MONGO_URI)
 
-# Create a unique index on the 'url' field
-collection.create_index("url", unique=True)
+def get_collection():
+    client = get_mongo_client()
+    db = client["ask_the_news"]
+    collection = db["articles"]
+    # Create a unique index on the 'url' field
+    collection.create_index("url", unique=True)
+    return collection
 
 def fetch_articles(topic: str, max_articles: int = 10):
+    if not API_KEY:
+        logger.error("GNEWS_KEY environment variable is required")
+        return
+    
     encoded_query = quote_plus(topic)
     url = f"https://gnews.io/api/v4/search?q={encoded_query}&lang=en&apikey={API_KEY}&max={max_articles}"
 
@@ -33,6 +44,13 @@ def fetch_articles(topic: str, max_articles: int = 10):
 
     articles = response.json().get("articles", [])
     count = 0
+    
+    try:
+        collection = get_collection()
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        return
+    
     for article in articles:
         count += 1
         full_content = ""
@@ -62,4 +80,12 @@ def fetch_articles(topic: str, max_articles: int = 10):
             )
         except DuplicateKeyError:
             logger.info(f"Duplicate article found for URL: {data['url']}")
+        except Exception as e:
+            logger.error(f"Failed to save article {data['url']}: {e}")
     logger.info(f"Found {count} articles on {encoded_query}")
+
+# Add main execution for testing
+if __name__ == "__main__":
+    import sys
+    topic = sys.argv[1] if len(sys.argv) > 1 else "technology"
+    fetch_articles(topic)
